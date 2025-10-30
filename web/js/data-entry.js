@@ -30,6 +30,9 @@ export function initDataEntry() {
     // Hide data entry panel if data is already loaded
     document.getElementById('data-entry-panel').classList.add('hidden');
     if (showBtn) showBtn.style.display = 'block';
+  } else {
+    // Pre-load sample data by default
+    loadSampleData();
   }
   
   addStarBtn.addEventListener('click', addStarEntry);
@@ -125,33 +128,56 @@ function toggleDataEntryPanel() {
  * Load sample data for testing
  */
 function loadSampleData() {
-  // Set sample image center coordinates
-  document.getElementById('image-center-ra').value = 0.1398;
-  document.getElementById('image-center-dec').value = 29.0905;
+  // Set sample image center coordinates from PixInsight output
+  // RA: 0 08 36.250 (HMS), Dec: +29 03 43.24 (DMS)
+  document.getElementById('image-center-ra-hours').value = 0;
+  document.getElementById('image-center-ra-minutes').value = 8;
+  document.getElementById('image-center-ra-seconds').value = 36.250;
   
-  // Clear existing entries except first
+  document.getElementById('image-center-dec-sign').value = 1;
+  document.getElementById('image-center-dec-degrees').value = 29;
+  document.getElementById('image-center-dec-minutes').value = 3;
+  document.getElementById('image-center-dec-seconds').value = 43.24;
+  
+  // Clear existing entries
   const container = document.getElementById('stars-container');
-  const entries = container.querySelectorAll('.star-entry');
-  for (let i = entries.length - 1; i > 0; i--) {
-    entries[i].remove();
-  }
+  container.innerHTML = '';
   
-  // Set sample star data
-  const firstEntry = entries[0];
-  firstEntry.querySelector('.star-label').value = 'Alpheratz';
-  firstEntry.querySelector('.hip-number').value = 677;
-  firstEntry.querySelector('.distance-pc').value = 29.8;
+  // Pre-load Primary star and Stars A-E
+  const sampleStars = [
+    { label: 'Alpheratz', hip: 677, distance: 29.8 },
+    { label: 'Star A', hip: 544, distance: 13.8 },
+    { label: 'Star B', hip: 540, distance: 14.2 },
+    { label: 'Star C', hip: 502, distance: 15.5 },
+    { label: 'Star D', hip: 423, distance: 16.0 },
+    { label: 'Star E', hip: 971, distance: 18.3 }
+  ];
   
-  // Add a few more sample stars
-  addStarEntry();
-  const entryA = container.querySelectorAll('.star-entry')[1];
-  entryA.querySelector('.hip-number').value = 544;
-  entryA.querySelector('.distance-pc').value = 13.8;
+  starEntryCount = 0;
   
-  addStarEntry();
-  const entryB = container.querySelectorAll('.star-entry')[2];
-  entryB.querySelector('.hip-number').value = 540;
-  entryB.querySelector('.distance-pc').value = 14.2;
+  sampleStars.forEach((star, index) => {
+    const entry = document.createElement('div');
+    entry.className = 'star-entry';
+    entry.innerHTML = `
+      <div class="form-group">
+        <label>Star Label:</label>
+        <input type="text" class="star-label" placeholder="${star.label}" value="${star.label}">
+      </div>
+      <div class="form-group">
+        <label>HIP Number:</label>
+        <input type="number" class="hip-number" placeholder="e.g., ${star.hip}" value="${star.hip}" required>
+      </div>
+      <div class="form-group">
+        <label>Distance (pc):</label>
+        <input type="number" class="distance-pc" step="0.01" placeholder="e.g., ${star.distance}" value="${star.distance}" required>
+      </div>
+    `;
+    
+    container.appendChild(entry);
+    starEntryCount++;
+  });
+  
+  updateRemoveButton();
 }
 
 /**
@@ -170,16 +196,27 @@ async function handleFormSubmit(event) {
   
   try {
     const imageFile = document.getElementById('image-upload').files[0];
-    const centerRA = parseFloat(document.getElementById('image-center-ra').value);
-    const centerDec = parseFloat(document.getElementById('image-center-dec').value);
+    
+    // Parse RA from HMS format
+    const raHours = parseFloat(document.getElementById('image-center-ra-hours').value) || 0;
+    const raMinutes = parseFloat(document.getElementById('image-center-ra-minutes').value) || 0;
+    const raSeconds = parseFloat(document.getElementById('image-center-ra-seconds').value) || 0;
+    const centerRA = (raHours + raMinutes / 60 + raSeconds / 3600) * 15; // Convert to degrees
+    
+    // Parse Dec from DMS format
+    const decSign = parseFloat(document.getElementById('image-center-dec-sign').value) || 1;
+    const decDegrees = parseFloat(document.getElementById('image-center-dec-degrees').value) || 0;
+    const decMinutes = parseFloat(document.getElementById('image-center-dec-minutes').value) || 0;
+    const decSeconds = parseFloat(document.getElementById('image-center-dec-seconds').value) || 0;
+    const centerDec = decSign * (decDegrees + decMinutes / 60 + decSeconds / 3600);
     
     if (!imageFile) {
       alert('Please upload an image file');
       return;
     }
     
-    if (isNaN(centerRA) || isNaN(centerDec)) {
-      alert('Please enter valid center coordinates');
+    if (isNaN(centerRA) || isNaN(centerDec) || centerRA < 0 || centerRA > 360 || centerDec < -90 || centerDec > 90) {
+      alert('Please enter valid center coordinates in HMS/DMS format');
       return;
     }
     
@@ -232,9 +269,15 @@ async function handleFormSubmit(event) {
     const imageWidth = image.width;
     const imageHeight = image.height;
     
-    // Calculate scale (use default telescope parameters)
-    const fov = estimateFOV(); // Default telescope parameters
-    const scale = calculateScale(fov, imageWidth);
+    // Calculate scale using hardcoded field of view (4° x 2.5°)
+    // FOV width: 3d 54' 14.7" ≈ 3.904° ≈ 4°
+    // FOV height: 2d 36' 9.8" ≈ 2.603° ≈ 2.5°
+    const fovWidthDeg = 3.904; // Actual: 3d 54' 14.7"
+    const fovHeightDeg = 2.603; // Actual: 2d 36' 9.8"
+    const scaleX = calculateScale(fovWidthDeg, imageWidth);
+    const scaleY = calculateScale(fovHeightDeg, imageHeight);
+    // Use average scale for circular field approximation
+    const scale = (scaleX + scaleY) / 2;
     
     submitBtn.textContent = 'Converting coordinates...';
     

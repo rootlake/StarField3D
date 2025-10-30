@@ -15,8 +15,15 @@
  * @returns {{x: number, y: number}|null}
  */
 export function raDecToPixel(ra, dec, centerRA, centerDec, imageWidth, imageHeight, scale = 3.5) {
+  // Handle RA wrapping (RA can be 0-360 degrees)
+  let raDiff = ra - centerRA;
+  
+  // Normalize RA difference to [-180, 180] range
+  if (raDiff > 180) raDiff -= 360;
+  if (raDiff < -180) raDiff += 360;
+  
   // Convert degrees to radians
-  const raRad = (ra - centerRA) * Math.PI / 180;
+  const raRad = raDiff * Math.PI / 180;
   const decRad = dec * Math.PI / 180;
   const centerDecRad = centerDec * Math.PI / 180;
   
@@ -40,8 +47,8 @@ export function raDecToPixel(ra, dec, centerRA, centerDec, imageWidth, imageHeig
   const xPixel = imageWidth / 2 + xArcsec / scale;
   const yPixel = imageHeight / 2 - yArcsec / scale; // Flip Y axis
   
-  // Allow stars slightly outside bounds (10% margin) for better visualization
-  const margin = Math.max(imageWidth, imageHeight) * 0.1;
+  // Allow stars slightly outside bounds (20% margin) for better visualization
+  const margin = Math.max(imageWidth, imageHeight) * 0.2;
   if (xPixel < -margin || xPixel > imageWidth + margin || 
       yPixel < -margin || yPixel > imageHeight + margin) {
     return null; // Point is too far outside image bounds
