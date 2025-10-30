@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Generated assets (user data)
+web/assets/stars.json
+web/assets/*.jpg
+web/assets/*.png
+web/assets/*.jpeg
+
+# Keep example files
+!web/assets/stars.json.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+

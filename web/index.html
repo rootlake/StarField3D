@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAIAView 3D Visualization</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="data-entry-panel" class="panel">
+        <div class="panel-content">
+            <h2>Enter Star Data</h2>
+            <form id="star-data-form">
+                <div class="form-section">
+                    <h3>Image Upload</h3>
+                    <div class="form-group">
+                        <label for="image-upload">Star Field Image (PNG):</label>
+                        <input type="file" id="image-upload" accept="image/png,image/jpeg,image/jpg" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="image-center-ra">Image Center RA (degrees):</label>
+                        <input type="number" id="image-center-ra" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="image-center-dec">Image Center Dec (degrees):</label>
+                        <input type="number" id="image-center-dec" step="0.001" required>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Stars</h3>
+                    <div id="stars-container">
+                        <!-- Primary star -->
+                        <div class="star-entry">
+                            <div class="form-group">
+                                <label>Star Label:</label>
+                                <input type="text" class="star-label" placeholder="e.g., Alpheratz" value="Alpheratz">
+                            </div>
+                            <div class="form-group">
+                                <label>HIP Number:</label>
+                                <input type="number" class="hip-number" placeholder="e.g., 677" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Distance (pc):</label>
+                                <input type="number" class="distance-pc" step="0.01" placeholder="e.g., 29.8" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="add-star-btn" class="btn-secondary">Add Star (A-Z)</button>
+                    <button type="button" id="remove-star-btn" class="btn-secondary">Remove Last Star</button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="generate-visualization" class="btn-primary">Generate Visualization</button>
+                    <button type="button" id="load-sample-data" class="btn-secondary">Load Sample Data</button>
+                </div>
+            </form>
+        </div>
+        <button type="button" id="toggle-data-entry" class="toggle-btn">Hide Data Entry</button>
+    </div>
+    
+    <button type="button" id="show-data-entry" class="toggle-btn" style="display: none;">Show Data Entry</button>
+    
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="controls">
+            <div class="control-group">
+                <label for="star-count">Stars Visible:</label>
+                <input type="range" id="star-count" min="1" max="100" value="20">
+                <span id="star-count-value">20</span>
+            </div>
+            <div class="control-group">
+                <label for="distance-unit">Distance Unit:</label>
+                <select id="distance-unit">
+                    <option value="ly">Light Years</option>
+                    <option value="pc">Parsecs</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="show-lines" checked>
+                    Show Distance Lines
+                </label>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="show-labels" checked>
+                    Show Labels
+                </label>
+            </div>
+            <div class="control-group">
+                <label for="depth-scale">Depth Scale:</label>
+                <input type="range" id="depth-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                <span id="depth-scale-value">1.0</span>
+            </div>
+        </div>
+        <div id="info">
+            <div id="instructions">
+                <h3>Controls</h3>
+                <ul>
+                    <li><strong>Left Click + Drag:</strong> Rotate view</li>
+                    <li><strong>Right Click + Drag:</strong> Pan view</li>
+                    <li><strong>Mouse Wheel:</strong> Zoom in/out</li>
+                </ul>
+            </div>
+            <div id="stats">
+                <div>Stars Loaded: <span id="total-stars">0</span></div>
+                <div>Stars Visible: <span id="visible-stars">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
+

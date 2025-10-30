@@ -1,0 +1,15 @@
+{
+  "name": "starslice-converter",
+  "version": "1.0.0",
+  "description": "Convert PixInsight annotation data to StarSlice JSON format",
+  "main": "data-converter.js",
+  "type": "module",
+  "scripts": {
+    "convert": "node data-converter.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.3",
+    "node-fetch": "^3.3.2"
+  }
+}
+

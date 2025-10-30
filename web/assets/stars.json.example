@@ -1,0 +1,33 @@
+{
+  "image": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7777777777777777,
+    "filename": "starfield.jpg"
+  },
+  "volume": {
+    "width": 1920,
+    "height": 1080,
+    "depth": 1920
+  },
+  "scaling": {
+    "frontOffsetLy": 0,
+    "maxDistanceLy": 500,
+    "distanceRangeLy": 500
+  },
+  "stars": [
+    {
+      "hip": 677,
+      "name": "HIP 677",
+      "ra": 0.123,
+      "dec": 29.06,
+      "pixelX": 960,
+      "pixelY": 540,
+      "magnitude": 2.1,
+      "distanceLy": 97.3,
+      "distancePc": 29.8,
+      "scaledDistance": 0.1946
+    }
+  ]
+}
+
