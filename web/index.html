@@ -7,83 +7,148 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="data-entry-panel" class="panel">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-button active" id="tab-data-entry" data-tab="data-entry">
+            Data Entry
+        </button>
+        <button class="tab-button" id="tab-3d-model" data-tab="3d-model" disabled>
+            3D Model
+        </button>
+    </div>
+    
+    <!-- Data Entry Tab -->
+    <div id="data-entry-panel" class="tab-content active" data-tab="data-entry">
         <div class="panel-content">
             <h2>Enter Star Data</h2>
+            
+            <div id="progress-bar" class="progress-bar">
+                <div class="progress-step active" id="step-load-image">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Load Image</div>
+                </div>
+                <div class="progress-step" id="step-center-coords">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Center Coordinates</div>
+                </div>
+                <div class="progress-step" id="step-primary-star">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Primary Star</div>
+                </div>
+                <div class="progress-step" id="step-star-selections">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Star Selections</div>
+                </div>
+                <div class="progress-actions">
+                    <button type="button" id="generate-visualization-top" class="btn-primary" disabled>Generate 3D Model</button>
+                </div>
+            </div>
+            
             <form id="star-data-form">
-                <div class="form-section">
+                <!-- Image Upload Card (Left) -->
+                <div class="form-card">
                     <h3>Image Upload</h3>
                     <div class="form-group">
-                        <label for="image-upload">Star Field Image (PNG):</label>
+                        <label for="image-upload">Front Image (PNG/JPG):</label>
                         <input type="file" id="image-upload" accept="image/png,image/jpeg,image/jpg" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="image-center-ra-hours">Image Center RA:</label>
-                        <div style="display: flex; gap: 5px; align-items: center;">
-                            <input type="number" id="image-center-ra-hours" placeholder="H" min="0" max="23" step="1" style="width: 60px;">
-                            <span>h</span>
-                            <input type="number" id="image-center-ra-minutes" placeholder="M" min="0" max="59" step="1" style="width: 60px;">
-                            <span>m</span>
-                            <input type="number" id="image-center-ra-seconds" placeholder="S" min="0" max="59.999" step="0.001" style="width: 80px;">
-                            <span>s</span>
+                        <div id="image-preview-container" style="margin-top: 10px; display: none;">
+                            <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px;">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="image-center-dec-degrees">Image Center Dec:</label>
-                        <div style="display: flex; gap: 5px; align-items: center;">
-                            <input type="number" id="image-center-dec-sign" placeholder="±" min="-1" max="1" step="1" value="1" style="width: 40px;">
-                            <input type="number" id="image-center-dec-degrees" placeholder="°" min="0" max="90" step="1" style="width: 60px;">
-                            <span>°</span>
-                            <input type="number" id="image-center-dec-minutes" placeholder="'" min="0" max="59" step="1" style="width: 60px;">
-                            <span>'</span>
-                            <input type="number" id="image-center-dec-seconds" placeholder="&quot;" min="0" max="59.999" step="0.01" style="width: 80px;">
-                            <span>"</span>
+                        <label for="back-image-upload">Back Image (PNG/JPG, optional):</label>
+                        <input type="file" id="back-image-upload" accept="image/png,image/jpeg,image/jpg">
+                        <small style="color: #999; display: block; margin-top: 5px;">If provided, this image will be displayed on the back face of the volume</small>
+                        <div id="back-image-preview-container" style="margin-top: 10px; display: none;">
+                            <img id="back-image-preview" src="" alt="Back Preview" style="max-width: 100%; max-height: 300px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px;">
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-section">
-                    <h3>Stars</h3>
-                    <div id="stars-container">
-                        <!-- Primary star -->
-                        <div class="star-entry">
-                            <div class="form-group">
-                                <label>Star Label:</label>
-                                <input type="text" class="star-label" placeholder="e.g., Alpheratz" value="Alpheratz">
+                <!-- Coordinates and Stars Card (Right) -->
+                <div class="form-card">
+                    <h3>Image Center Coordinates</h3>
+                    <div style="display: flex; gap: 20px; align-items: flex-start;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="image-center-ra-hours">Right Ascension (RA):</label>
+                            <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-start;">
+                                <input type="number" id="image-center-ra-hours" placeholder="H" min="0" max="23" step="1" style="width: 70px; text-align: center;">
+                                <span style="min-width: 15px;">h</span>
+                                <input type="number" id="image-center-ra-minutes" placeholder="M" min="0" max="59" step="1" style="width: 70px; text-align: center;">
+                                <span style="min-width: 15px;">m</span>
+                                <input type="number" id="image-center-ra-seconds" placeholder="S" min="0" max="59.999" step="0.001" style="width: 90px; text-align: center;">
+                                <span style="min-width: 15px;">s</span>
                             </div>
-                            <div class="form-group">
-                                <label>HIP Number:</label>
-                                <input type="number" class="hip-number" placeholder="e.g., 677" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Distance (pc):</label>
-                                <input type="number" class="distance-pc" step="0.01" placeholder="e.g., 29.8" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="image-center-dec-degrees">Declination (Dec):</label>
+                            <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-start;">
+                                <select id="image-center-dec-sign" style="width: 60px; text-align: center;">
+                                    <option value="1">+</option>
+                                    <option value="-1">-</option>
+                                </select>
+                                <input type="number" id="image-center-dec-degrees" placeholder="°" min="0" max="90" step="1" style="width: 70px; text-align: center;">
+                                <span style="min-width: 15px;">°</span>
+                                <input type="number" id="image-center-dec-minutes" placeholder="'" min="0" max="59" step="1" style="width: 70px; text-align: center;">
+                                <span style="min-width: 15px;">'</span>
+                                <input type="number" id="image-center-dec-seconds" placeholder="&quot;" min="0" max="59.999" step="0.01" style="width: 90px; text-align: center;">
+                                <span style="min-width: 15px;">"</span>
                             </div>
                         </div>
                     </div>
-                    <button type="button" id="add-star-btn" class="btn-secondary">Add Star (A-Z)</button>
-                    <button type="button" id="remove-star-btn" class="btn-secondary">Remove Last Star</button>
+                    
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="margin: 0 0 16px 0; color: #00e6e6; font-size: 18px; font-weight: 600;">Stars</h3>
+                        <div id="stars-container">
+                            <!-- Primary star -->
+                            <div class="star-entry">
+                                <div class="form-group">
+                                    <label>Star Label:</label>
+                                    <input type="text" class="star-label" placeholder="e.g., Alpheratz" value="Alpheratz">
+                                </div>
+                                <div class="form-group">
+                                    <label>HIP Number:</label>
+                                    <input type="number" class="hip-number" placeholder="e.g., 677" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Spectral Type:</label>
+                                    <div class="spectral-type-wrapper">
+                                        <div class="spectral-color-preview" style="background: #444;"></div>
+                                        <select class="spectral-type">
+                                            <!-- Options will be generated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Distance (pc):</label>
+                                    <input type="number" class="distance-pc" step="0.01" placeholder="e.g., 29.8" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>App. Mag.:</label>
+                                    <input type="number" class="magnitude" step="0.1" placeholder="e.g., 2.1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions-inline">
+                            <button type="button" id="add-star-btn" class="btn-secondary">Add Star (A-Z)</button>
+                            <button type="button" id="remove-star-btn" class="btn-secondary">Remove Last Star</button>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="submit" id="generate-visualization" class="btn-primary">Generate Visualization</button>
+                    <button type="submit" id="generate-visualization" class="btn-primary" disabled>Generate 3D Model</button>
                     <button type="button" id="load-sample-data" class="btn-secondary">Load Sample Data</button>
                 </div>
             </form>
         </div>
-        <button type="button" id="toggle-data-entry" class="toggle-btn">Hide Data Entry</button>
     </div>
     
-    <button type="button" id="show-data-entry" class="toggle-btn" style="display: none;">Show Data Entry</button>
-    
-    <div id="container">
+    <!-- 3D Model Tab -->
+    <div id="container" class="tab-content" data-tab="3d-model">
         <canvas id="canvas"></canvas>
         <div id="controls">
-            <div class="control-group">
-                <label for="star-count">Stars Visible:</label>
-                <input type="range" id="star-count" min="1" max="100" value="20">
-                <span id="star-count-value">20</span>
-            </div>
             <div class="control-group">
                 <label for="distance-unit">Distance Unit:</label>
                 <select id="distance-unit">
@@ -93,20 +158,53 @@
             </div>
             <div class="control-group">
                 <label>
-                    <input type="checkbox" id="show-lines" checked>
-                    Show Distance Lines
+                    <input type="checkbox" id="toggle-star-lines" checked>
+                    Show Star Lines
                 </label>
             </div>
             <div class="control-group">
                 <label>
-                    <input type="checkbox" id="show-labels" checked>
-                    Show Labels
+                    <input type="checkbox" id="toggle-star-spheres" checked>
+                    Show Star Spheres
                 </label>
             </div>
             <div class="control-group">
-                <label for="depth-scale">Depth Scale:</label>
-                <input type="range" id="depth-scale" min="0.5" max="2.0" step="0.1" value="1.0">
-                <span id="depth-scale-value">1.0</span>
+                <label>
+                    <input type="checkbox" id="toggle-star-labels" checked>
+                    Show Star Labels
+                </label>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="toggle-info-labels" checked>
+                    Show Info Labels
+                </label>
+            </div>
+            <div class="control-group">
+                <label for="label-size">Info Label Size:</label>
+                <input type="range" id="label-size" min="0.5" max="3.0" step="0.1" value="1.0">
+                <span id="label-size-value">1.0</span>
+            </div>
+            <div class="control-group">
+                <label for="star-label-size">Star Label Size:</label>
+                <input type="range" id="star-label-size" min="0.5" max="3.0" step="0.1" value="1.0">
+                <span id="star-label-size-value">1.0</span>
+            </div>
+            <div class="control-group">
+                <label for="star-label-color">Star Label Color:</label>
+                <input type="color" id="star-label-color" value="#ffffff">
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="toggle-wireframe" checked>
+                    Show Wireframe
+                </label>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="toggle-distance-labels" checked>
+                    Show Distance Labels
+                </label>
             </div>
         </div>
         <div id="info">

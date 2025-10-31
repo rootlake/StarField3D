@@ -15,6 +15,7 @@
  * @returns {{x: number, y: number}|null}
  */
 export function raDecToPixel(ra, dec, centerRA, centerDec, imageWidth, imageHeight, scale = 3.5) {
+  // RA and Dec should be in degrees
   // Handle RA wrapping (RA can be 0-360 degrees)
   let raDiff = ra - centerRA;
   
@@ -27,25 +28,37 @@ export function raDecToPixel(ra, dec, centerRA, centerDec, imageWidth, imageHeig
   const decRad = dec * Math.PI / 180;
   const centerDecRad = centerDec * Math.PI / 180;
   
-  // Gnomonic projection
+  // Gnomonic projection (tangent plane projection)
+  // Based on standard astronomical gnomonic projection formula
   const cosDec = Math.cos(decRad);
   const sinDec = Math.sin(decRad);
   const cosCenterDec = Math.cos(centerDecRad);
   const sinCenterDec = Math.sin(centerDecRad);
   
-  const denominator = sinDec * sinCenterDec + cosDec * cosCenterDec * Math.cos(raRad);
+  // A = cos(dec) * cos(ra - centerRA)
+  const A = cosDec * Math.cos(raRad);
+  
+  // Denominator: sin(centerDec) * sin(dec) + cos(centerDec) * cos(dec) * cos(ra - centerRA)
+  const denominator = sinCenterDec * sinDec + cosCenterDec * A;
   
   if (Math.abs(denominator) < 1e-10) {
-    return null; // Point is too far from center
+    return null; // Point is too far from center (near pole)
   }
   
-  // Calculate x and y in arcseconds
-  const xArcsec = (cosDec * Math.sin(raRad) / denominator) * 206265; // Convert to arcseconds
-  const yArcsec = ((sinDec * cosCenterDec - cosDec * sinCenterDec * Math.cos(raRad)) / denominator) * 206265;
+  // Calculate angular offsets in radians
+  // X axis: negative because RA increases to the left (east) in sky coordinates
+  // Y axis: positive because Dec increases upward (north) in sky coordinates
+  const xRad = -(cosDec * Math.sin(raRad)) / denominator;
+  const yRad = (cosCenterDec * sinDec - sinCenterDec * A) / denominator;
   
-  // Convert arcseconds to pixels
+  // Convert radians to arcseconds (1 radian = 206265 arcseconds)
+  const xArcsec = xRad * 206265;
+  const yArcsec = yRad * 206265;
+  
+  // Convert arcseconds to pixels using the scale factor
+  // X increases to the right (positive X in image), Y increases downward (positive Y in image)
   const xPixel = imageWidth / 2 + xArcsec / scale;
-  const yPixel = imageHeight / 2 - yArcsec / scale; // Flip Y axis
+  const yPixel = imageHeight / 2 - yArcsec / scale; // Negative because image Y increases downward
   
   // Allow stars slightly outside bounds (20% margin) for better visualization
   const margin = Math.max(imageWidth, imageHeight) * 0.2;

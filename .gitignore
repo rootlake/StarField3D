@@ -8,8 +8,11 @@ web/assets/*.jpg
 web/assets/*.png
 web/assets/*.jpeg
 
-# Keep example files
+# Keep example files and demo images
 !web/assets/stars.json.example
+!web/assets/images/*.png
+!web/assets/images/*.jpg
+!web/assets/images/*.jpeg
 
 # OS files
 .DS_Store
