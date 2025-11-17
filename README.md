@@ -1,4 +1,4 @@
-# GAIAView 3D Visualization
+# Star Field 3D
 
 Interactive 3D visualization tool that transforms 2D star field images into dynamic 3D volumes showing true stellar distances. Designed for astronomy students to explore the spatial relationships between stars and demonstrate that even within a small field of view, the actual distances between stars are immense.
 

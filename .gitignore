@@ -28,3 +28,8 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Large FITS files (not needed for web deployment)
+*.fit
+*.fits
+FITS/
+
