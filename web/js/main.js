@@ -49,10 +49,10 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
   
   // Add lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Slightly reduced from 0.5
   scene.add(ambientLight);
   
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7); // Slightly reduced from 0.8
   directionalLight.position.set(1000, 1000, 1000);
   scene.add(directionalLight);
   
@@ -225,32 +225,31 @@ async function createImagePlane() {
   scene.add(imagePlane);
   
   // Create back image plane if provided
-  // TEMPORARILY DISABLED FOR PERFORMANCE
-  // if (starData.backImage) {
-  //   if (backImagePlane) {
-  //     scene.remove(backImagePlane);
-  //   }
-  //   
-  //   const backWidth = starData.backImage.width * scale;
-  //   const backHeight = starData.backImage.height * scale;
-  //   const backImageUrl = starData.backImage.url || `assets/${starData.backImage.filename}`;
-  //   
-  //   backImagePlane = await createImagePlaneTexture(backImageUrl, backWidth, backHeight);
-  //   
-  //   // Position back image plane slightly behind front image to avoid Z-fighting
-  //   // Increase gap size to prevent visual glitches
-  //   const gapSize = Math.max(width, height) * 0.002; // Larger gap - 0.2% of max dimension
-  //   const backZ = frontZ - gapSize;
-  //   backImagePlane.position.z = backZ;
-  //   
-  //   // Rotate 180 degrees around Y axis so it faces backward (back-to-back with front)
-  //   backImagePlane.rotation.y = Math.PI;
-  //   
-  //   // Initially hide back image (will show when camera views from behind)
-  //   backImagePlane.visible = false;
-  //   
-  //   scene.add(backImagePlane);
-  // }
+  if (starData.backImage) {
+    if (backImagePlane) {
+      scene.remove(backImagePlane);
+    }
+    
+    const backWidth = starData.backImage.width * scale;
+    const backHeight = starData.backImage.height * scale;
+    const backImageUrl = starData.backImage.url || `assets/${starData.backImage.filename}`;
+    
+    backImagePlane = await createImagePlaneTexture(backImageUrl, backWidth, backHeight);
+    
+    // Position back image plane slightly behind front image to avoid Z-fighting
+    // Increase gap size to prevent visual glitches
+    const gapSize = Math.max(width, height) * 0.002; // Larger gap - 0.2% of max dimension
+    const backZ = frontZ - gapSize;
+    backImagePlane.position.z = backZ;
+    
+    // Rotate 180 degrees around Y axis so it faces backward (back-to-back with front)
+    backImagePlane.rotation.y = Math.PI;
+    
+    // Initially hide back image (will show when camera views from behind)
+    backImagePlane.visible = false;
+    
+    scene.add(backImagePlane);
+  }
 }
 
 /**
@@ -544,7 +543,7 @@ function addDistanceLabels() {
   };
   
   // Create label sprite (floating text, no background)
-  const createLabelSprite = (textLines, position) => {
+  const createLabelSprite = (textLines, position, scaleFactor = 1.0) => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.width = 256;
@@ -555,7 +554,7 @@ function addDistanceLabels() {
     // context.fillRect(0, 0, canvas.width, canvas.height);
     
     context.fillStyle = '#ffffff';
-    context.font = 'bold 18px Arial';
+    context.font = `bold ${18 * scaleFactor}px Arial`; // Scale font size
     context.textAlign = 'center';
     
     textLines.forEach((line, index) => {
@@ -572,44 +571,38 @@ function addDistanceLabels() {
     
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.position.copy(position);
-    sprite.scale.set(50, (textLines.length * 8 + 2), 1);
+    sprite.scale.set(50 * scaleFactor, (textLines.length * 8 + 2) * scaleFactor, 1); // Scale sprite size
     
     return sprite;
   };
   
-  // Front corner label (closest distance)
+  // Front corner label (closest distance) - 50% smaller
   const frontLabelLines = [
     formatDistanceValue(frontOffsetLy, 'ly'),
     formatDistanceValue(frontOffsetPc, 'pc')
   ];
-  const frontLabel = createLabelSprite(frontLabelLines, frontCornerPos);
+  const frontLabel = createLabelSprite(frontLabelLines, frontCornerPos, 0.5);
   scene.add(frontLabel);
   distanceLabels.push(frontLabel);
   
-  // Back corner label (furthest distance)
+  // Back corner label (furthest distance) - 50% smaller
   const backLabelLines = [
     formatDistanceValue(maxDistanceLy, 'ly'),
     formatDistanceValue(maxDistancePc, 'pc')
   ];
-  const backLabel = createLabelSprite(backLabelLines, backCornerPos);
+  const backLabel = createLabelSprite(backLabelLines, backCornerPos, 0.5);
   scene.add(backLabel);
   distanceLabels.push(backLabel);
   
-  // Span label (inside, showing range)
+  // Span label (along right top edge, between front and back corners) - 50% smaller
   const spanLabelLines = [
     `${formatDistanceValue(spanLy, 'ly')} (${formatDistanceValue(spanPc, 'pc')})`
   ];
-  const spanLabel = createLabelSprite(spanLabelLines, spanPos);
+  // Position on right top edge: x = halfWidth (right), y = halfHeight (top), z = 0 (center between front and back)
+  const rightTopEdgePos = new THREE.Vector3(halfWidth + 10, halfHeight + 5, 0);
+  const spanLabel = createLabelSprite(spanLabelLines, rightTopEdgePos, 0.5);
   scene.add(spanLabel);
   distanceLabels.push(spanLabel);
-  
-  // Side span label (on left vertical edge, centered vertically)
-  const sideSpanPos = new THREE.Vector3(-halfWidth - 5, 0, 0); // Left side, centered vertically
-  const sideSpanLabel = createLabelSprite(spanLabelLines, sideSpanPos);
-  // Rotate to be vertical (90 degrees around Z axis)
-  sideSpanLabel.rotation.z = Math.PI / 2;
-  scene.add(sideSpanLabel);
-  distanceLabels.push(sideSpanLabel);
 }
 
 /**
@@ -641,7 +634,7 @@ function updateDistanceLabels() {
     }
   };
   
-  // Update front corner label (index 0)
+  // Update front corner label (index 0) - 50% smaller
   if (distanceLabels[0]) {
     distanceLabels[0].material.map.dispose();
     const canvas = document.createElement('canvas');
@@ -651,7 +644,7 @@ function updateDistanceLabels() {
     
     // No background - transparent
     context.fillStyle = '#ffffff';
-    context.font = 'bold 18px Arial';
+    context.font = 'bold 9px Arial'; // 50% of 18px
     context.textAlign = 'center';
     
     const frontLabelLines = [
@@ -666,9 +659,10 @@ function updateDistanceLabels() {
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     distanceLabels[0].material.map = texture;
+    distanceLabels[0].scale.set(25, 32, 1); // 50% of original scale
   }
   
-  // Update back corner label (index 1)
+  // Update back corner label (index 1) - 50% smaller
   if (distanceLabels[1]) {
     distanceLabels[1].material.map.dispose();
     const canvas = document.createElement('canvas');
@@ -678,7 +672,7 @@ function updateDistanceLabels() {
     
     // No background - transparent
     context.fillStyle = '#ffffff';
-    context.font = 'bold 18px Arial';
+    context.font = 'bold 9px Arial'; // 50% of 18px
     context.textAlign = 'center';
     
     const backLabelLines = [
@@ -693,9 +687,10 @@ function updateDistanceLabels() {
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     distanceLabels[1].material.map = texture;
+    distanceLabels[1].scale.set(25, 32, 1); // 50% of original scale
   }
   
-  // Update span label (index 2)
+  // Update span label (index 2) - 50% smaller, moved to right top edge
   if (distanceLabels[2]) {
     distanceLabels[2].material.map.dispose();
     const canvas = document.createElement('canvas');
@@ -705,7 +700,7 @@ function updateDistanceLabels() {
     
     // No background - transparent
     context.fillStyle = '#ffffff';
-    context.font = 'bold 18px Arial';
+    context.font = 'bold 9px Arial'; // 50% of 18px
     context.textAlign = 'center';
     
     const spanLabelText = `${formatDistanceValue(spanLy, distanceUnit)} (${formatDistanceValue(spanPc, distanceUnit === 'ly' ? 'pc' : 'ly')})`;
@@ -714,27 +709,10 @@ function updateDistanceLabels() {
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     distanceLabels[2].material.map = texture;
-  }
-  
-  // Update side span label (index 3)
-  if (distanceLabels[3]) {
-    distanceLabels[3].material.map.dispose();
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = 256;
-    canvas.height = 40;
+    distanceLabels[2].scale.set(25, 20, 1); // 50% of original scale
     
-    // No background - transparent
-    context.fillStyle = '#ffffff';
-    context.font = 'bold 18px Arial';
-    context.textAlign = 'center';
-    
-    const spanLabelText = `${formatDistanceValue(spanLy, distanceUnit)} (${formatDistanceValue(spanPc, distanceUnit === 'ly' ? 'pc' : 'ly')})`;
-    context.fillText(spanLabelText, canvas.width / 2, canvas.height / 2 + 7);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    distanceLabels[3].material.map = texture;
+    // Update position to right top edge
+    distanceLabels[2].position.set(halfWidth + 10, halfHeight + 5, 0);
   }
 }
 
@@ -743,6 +721,18 @@ function updateDistanceLabels() {
  */
 function animate() {
   requestAnimationFrame(animate);
+  
+  // Update back image visibility based on camera position
+  if (backImagePlane && starData) {
+    const scale = 0.1;
+    const { width: imgWidth, height: imgHeight } = starData.image;
+    const depth = imgWidth * scale;
+    const frontZ = depth / 2;
+    
+    // Show back image when camera is behind the front image plane
+    // Use a small threshold to prevent flickering
+    backImagePlane.visible = camera.position.z < frontZ - 10;
+  }
   
   controls.update();
   renderer.render(scene, camera);

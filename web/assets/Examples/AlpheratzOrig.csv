@@ -1,0 +1,7 @@
+ImageCenterRA_H,ImageCenterRA_M,ImageCenterRA_S,ImageCenterDec_Sign,ImageCenterDec_D,ImageCenterDec_M,ImageCenterDec_S,FrontImage,BackImage,Label,HIP,Temperature_K,Distance_pc,Magnitude
+0,8,36.250,1,29,3,43.24,Alpheratz_Annotated.png,Alpheratz_Annotated_Back.png,Alpheratz,677,9500,29.8,2.1
+,,,,,,,,,A,544,9500,13.8,
+,,,,,,,,,B,540,9500,14.2,
+,,,,,,,,,C,502,9500,15.5,
+,,,,,,,,,D,423,9500,16.0,
+,,,,,,,,,E,971,9500,18.3,

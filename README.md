@@ -74,7 +74,7 @@ Instructors can pre-process data using the converter script:
 ## Project Structure
 
 ```
-GAIAView/
+StarField3D/
 ├── converter/              # Node.js scripts for data processing
 │   ├── pixinsight-parser.js    # Parse annotation/export data
 │   ├── distance-lookup.js      # SIMBAD API or HIP catalog lookup
@@ -115,12 +115,26 @@ GAIAView/
 
 #### Option 1: GitHub Pages (Recommended)
 
+**Automatic Deployment (Recommended)**
+
+The repository includes a GitHub Actions workflow that automatically deploys to GitHub Pages:
+
+1. Push repository to GitHub
+2. Go to repository Settings → Pages
+3. Under "Source", select "GitHub Actions"
+4. The workflow will automatically deploy when you push to the `main` branch
+5. Your site will be available at `https://rootlake.github.io/StarField3D/`
+
+**Manual Deployment (Alternative)**
+
+If you prefer manual deployment:
+
 1. Push repository to GitHub
 2. Go to repository Settings → Pages
 3. Set Source to "Deploy from a branch"
 4. Select branch: `main` (or your main branch)
 5. Set folder to `/web`
-6. Save - site will be available at `https://yourusername.github.io/GAIAView/`
+6. Save - site will be available at `https://rootlake.github.io/StarField3D/`
 
 #### Option 2: Local Development
 
@@ -153,6 +167,25 @@ cd converter
 npm install
 ```
 
+## Quick Start for Students
+
+**For detailed instructions, see [STUDENT_GUIDE.md](STUDENT_GUIDE.md)**
+
+1. **Prepare your files:**
+   - Front image: `[StarName]_Front.jpg`
+   - Back image: `[StarName]_Back.jpg` (optional)
+   - CSV file with star data (see CSV format below)
+
+2. **Access the tool:**
+   - Navigate to the GitHub Pages site
+   - Or open `web/index.html` locally
+
+3. **Upload and visualize:**
+   - Click "Upload CSV" and select your CSV file
+   - Upload your front and back images
+   - Click "Generate 3D Model"
+   - Explore your visualization!
+
 ## Usage
 
 ### Controls
@@ -173,18 +206,27 @@ npm install
 
 **Image Upload:**
 - Upload PNG or JPG format star field image
-- Enter center RA/Dec coordinates in degrees (from PixInsight ImageSolver)
-  - RA: Right Ascension (e.g., 0.1398 degrees)
-  - Dec: Declination (e.g., 29.0905 degrees)
+- Standard frame size: All students should use images from the same observatory setup
+- Front image (required): `[StarName]_Front.jpg`
+- Back image (optional): `[StarName]_Back.jpg`
 
-**Star Data:**
+**CSV File Format:**
+- Required columns: `FrontImage`, `BackImage`, `Label`, `HIP`, `Temperature_K`, `Distance_pc`, `Magnitude`, `PixelX`, `PixelY`
+- First row: Headers (do not modify)
+- Second row: Fill in ALL columns including image filenames
+- Subsequent rows: Leave `FrontImage` and `BackImage` empty
+- See `STUDENT_GUIDE.md` for detailed CSV format instructions
+
+**Manual Data Entry (Alternative):**
 - Enter star label (e.g., "Alpheratz" or "Star A")
 - Enter HIP catalog number (e.g., 677)
 - Enter distance in parsecs (e.g., 29.8)
+- Enter pixel coordinates (X, Y) if available
 - Click "Add Star" to add more stars (up to 27 total)
 
 **Sample Data:**
-- Click "Load Sample Data" to fill form with example values
+- Use the "Load Example" dropdown to load example CSV files
+- Examples are available in `web/assets/Examples/`
 
 ## Technical Details
 
@@ -290,6 +332,29 @@ This tool is designed for:
 - [ ] Expanded HIP catalog with more stars
 - [ ] Custom telescope parameter input
 - [ ] Screenshot export functionality
+
+## For Instructors
+
+### Setting Up for Your Class
+
+1. **Standardize Frame Size:**
+   - Ensure all students use the same camera/telescope setup
+   - Document the standard image dimensions for your observatory
+   - Update `STUDENT_GUIDE.md` with your specific requirements
+
+2. **Prepare Example Data:**
+   - Add example CSV files to `web/assets/Examples/`
+   - Include corresponding images in `web/assets/images/`
+   - Examples will appear in the "Load Example" dropdown
+
+3. **Deploy to GitHub Pages:**
+   - Follow the GitHub Pages setup instructions above
+   - Share the GitHub Pages URL with students
+   - Students can access the tool from any device with a web browser
+
+### CSV Template
+
+Students should use the template in `web/assets/Examples/Google_Sheets_Template.csv`. See `STUDENT_GUIDE.md` for detailed instructions.
 
 ## Contributing
 

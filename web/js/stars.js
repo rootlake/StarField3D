@@ -23,7 +23,10 @@ export class StarVisualization {
     this.starLabel = null;
     this.infoLabel = null;
     this.endPoint = null; // Store the star sphere
+    this.glowSphere = null; // Store inner glow sphere
+    this.outerGlowSphere = null; // Store outer glow sphere
     this.baseLineRadius = null;
+    this.baseStarRadius = null; // Store base star radius
     this.baseStarLabelScale = null;
     this.baseInfoLabelScale = null;
     
@@ -81,14 +84,59 @@ export class StarVisualization {
     this.group.add(this.line);
     
     // Create point at 3D position (larger sphere representing the star)
-    const starRadius = Math.max(volWidth, volHeight) * 0.008; // Larger sphere size
+    // Calculate star size based on magnitude (brighter = larger)
+    const baseStarRadius = Math.max(volWidth, volHeight) * 0.008;
+    const magnitude = this.starData.magnitude !== null && this.starData.magnitude !== undefined 
+      ? this.starData.magnitude 
+      : 5.0; // Default magnitude if not provided
+    
+    // Scale size: brighter stars (lower magnitude) are larger
+    // Formula: size varies inversely with magnitude
+    // Brightest stars (mag ~1-2) get ~1.5x, dimmest (mag ~8-9) get ~0.5x
+    const magnitudeScale = Math.max(0.4, Math.min(1.5, 1.0 - (magnitude - 3) * 0.15));
+    const starRadius = baseStarRadius * magnitudeScale;
+    
+    // Create glow halo (larger transparent sphere around the star)
+    const glowRadius = starRadius * 2.5;
+    const glowGeometry = new THREE.SphereGeometry(glowRadius, 16, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: starColor,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.BackSide // Render inside-out for glow effect
+    });
+    const glowSphere = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowSphere.position.copy(pos3D);
+    this.glowSphere = glowSphere; // Store reference
+    this.group.add(glowSphere);
+    
+    // Create outer glow layer (softer, more diffuse)
+    const outerGlowRadius = starRadius * 4.0;
+    const outerGlowGeometry = new THREE.SphereGeometry(outerGlowRadius, 16, 16);
+    const outerGlowMaterial = new THREE.MeshBasicMaterial({
+      color: starColor,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.BackSide
+    });
+    const outerGlowSphere = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+    outerGlowSphere.position.copy(pos3D);
+    this.outerGlowSphere = outerGlowSphere; // Store reference
+    this.group.add(outerGlowSphere);
+    
+    // Create the main star sphere with emissive glow
     const endPointGeometry = new THREE.SphereGeometry(starRadius, 16, 16);
     
-    // Use spectral class color for the star (same as line)
-    const endPointMaterial = new THREE.MeshBasicMaterial({ color: starColor });
+    // Use MeshStandardMaterial with emissive properties for glow
+    const endPointMaterial = new THREE.MeshStandardMaterial({
+      color: starColor,
+      emissive: starColor,
+      emissiveIntensity: 1.0
+    });
     const endPoint = new THREE.Mesh(endPointGeometry, endPointMaterial);
     endPoint.position.copy(pos3D);
     this.endPoint = endPoint; // Store reference
+    this.baseStarRadius = starRadius; // Store for later reference
     this.group.add(endPoint);
     
     // Create star label (bigger, positioned over the star)
@@ -98,7 +146,7 @@ export class StarVisualization {
     this.createStarLabel(starLabelPosition);
     
     // Create info label positioned below the star tip
-    const infoLabelOffset = starRadius * 2.5; // Offset below star
+    const infoLabelOffset = starRadius * 4.0; // Increased offset - lower below star
     const infoLabelPosition = pos3D.clone();
     infoLabelPosition.y -= infoLabelOffset;
     this.createInfoLabel(infoLabelPosition, distanceLy, distancePc);
@@ -152,14 +200,16 @@ export class StarVisualization {
     // Create canvas for info label (HIP, distance, magnitude)
     const baseFontSize = 14;
     const fontSize = Math.round(baseFontSize * this.labelSize);
-    const canvasWidth = Math.round(180 * this.labelSize);
-    const canvasHeight = Math.round(60 * this.labelSize); // Reduced for 3 lines
+    // Reduced canvas size - tighter fit around text
+    const canvasWidth = Math.round(130 * this.labelSize);
+    const canvasHeight = Math.round(50 * this.labelSize); // Reduced from 60
     
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     
+    // Background with reduced padding
     context.fillStyle = 'rgba(0, 0, 0, 0.8)';
     context.fillRect(0, 0, canvas.width, canvas.height);
     
@@ -174,7 +224,7 @@ export class StarVisualization {
       : 'N/A';
     
     // Draw text with tighter spacing
-    let yPos = fontSize + 2;
+    let yPos = fontSize + 4; // Reduced top padding
     context.fillText(`HIP ${hip}`, canvas.width / 2, yPos);
     
     yPos += fontSize + 2;
@@ -193,8 +243,9 @@ export class StarVisualization {
     
     this.infoLabel = new THREE.Sprite(spriteMaterial);
     this.infoLabel.position.copy(position);
-    const baseScaleX = 15;
-    const baseScaleY = 4.5;
+    // Reduced scale to match smaller canvas
+    const baseScaleX = 13;
+    const baseScaleY = 4;
     this.infoLabel.scale.set(baseScaleX * this.labelSize, baseScaleY * this.labelSize, 1);
     this.baseInfoLabelScale = { x: baseScaleX, y: baseScaleY };
     
@@ -206,8 +257,9 @@ export class StarVisualization {
     if (this.infoLabel) {
       const baseFontSize = 14;
       const fontSize = Math.round(baseFontSize * this.labelSize);
-      const canvasWidth = Math.round(180 * this.labelSize);
-      const canvasHeight = Math.round(60 * this.labelSize);
+      // Use same reduced canvas size as createInfoLabel
+      const canvasWidth = Math.round(130 * this.labelSize);
+      const canvasHeight = Math.round(50 * this.labelSize);
       
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -231,7 +283,7 @@ export class StarVisualization {
         ? this.starData.magnitude.toFixed(1) 
         : 'N/A';
       
-      let yPos = fontSize + 2;
+      let yPos = fontSize + 4;
       context.fillText(`HIP ${hip}`, canvas.width / 2, yPos);
       
       yPos += fontSize + 2;
@@ -240,10 +292,16 @@ export class StarVisualization {
       yPos += fontSize + 2;
       context.fillText(`m = ${magnitude}`, canvas.width / 2, yPos);
       
+      // Dispose old texture and create new one
       this.infoLabel.material.map.dispose();
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
       this.infoLabel.material.map = texture;
+      
+      // Update scale to match new canvas size
+      const baseScaleX = 13;
+      const baseScaleY = 4;
+      this.infoLabel.scale.set(baseScaleX * this.labelSize, baseScaleY * this.labelSize, 1);
     }
   }
   
@@ -399,6 +457,12 @@ export class StarVisualization {
     if (this.endPoint) {
       this.endPoint.visible = visible;
     }
+    if (this.glowSphere) {
+      this.glowSphere.visible = visible;
+    }
+    if (this.outerGlowSphere) {
+      this.outerGlowSphere.visible = visible;
+    }
   }
   
   updateLabelSize(size) {
@@ -406,10 +470,15 @@ export class StarVisualization {
     if (this.infoLabel) {
       const baseFontSize = 14;
       const fontSize = Math.round(baseFontSize * this.labelSize);
-      const canvas = this.infoLabel.material.map.image;
+      // Use same reduced canvas size as createInfoLabel
+      const canvasWidth = Math.round(130 * this.labelSize);
+      const canvasHeight = Math.round(50 * this.labelSize);
+      
+      // Create new canvas (can't resize existing canvas)
+      const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      canvas.width = Math.round(180 * this.labelSize);
-      canvas.height = Math.round(80 * this.labelSize);
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       
       // Redraw info label
       const distanceLy = this.starData.distanceLy;
@@ -417,7 +486,6 @@ export class StarVisualization {
       const currentUnit = document.getElementById('distance-unit')?.value || 'ly';
       
       // Redraw the label content
-      context.clearRect(0, 0, canvas.width, canvas.height);
       context.fillStyle = 'rgba(0, 0, 0, 0.8)';
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.fillStyle = '#ffffff';
@@ -430,16 +498,22 @@ export class StarVisualization {
         ? this.starData.magnitude.toFixed(1) 
         : 'N/A';
       
-      let yPos = fontSize + 2;
+      let yPos = fontSize + 4;
       context.fillText(`HIP ${hip}`, canvas.width / 2, yPos);
       yPos += fontSize + 2;
       context.fillText(distText, canvas.width / 2, yPos);
       yPos += fontSize + 2;
       context.fillText(`m = ${magnitude}`, canvas.width / 2, yPos);
       
-      this.infoLabel.material.map.needsUpdate = true;
-      const baseScaleX = 15;
-      const baseScaleY = 6;
+      // Dispose old texture and create new one
+      this.infoLabel.material.map.dispose();
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      this.infoLabel.material.map = texture;
+      
+      // Update scale to match new canvas size
+      const baseScaleX = 13;
+      const baseScaleY = 4;
       this.infoLabel.scale.set(baseScaleX * this.labelSize, baseScaleY * this.labelSize, 1);
     }
     this.updateLabelPositions();
@@ -475,13 +549,18 @@ export class StarVisualization {
   setStarLabelColor(color) {
     this.starLabelColor = color;
     if (this.starLabel) {
-      const canvas = this.starLabel.material.map.image;
-      const context = canvas.getContext('2d');
+      // Recreate the canvas and texture with new color
       const baseFontSize = 32;
       const fontSize = Math.round(baseFontSize * this.starLabelSize);
+      const canvasWidth = Math.round(128 * this.starLabelSize);
+      const canvasHeight = Math.round(64 * this.starLabelSize);
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       
       // Redraw with new color
-      context.clearRect(0, 0, canvas.width, canvas.height);
       context.fillStyle = this.starLabelColor;
       context.font = `bold ${fontSize}px Arial`;
       context.textAlign = 'center';
@@ -489,14 +568,19 @@ export class StarVisualization {
       const label = name.length === 1 ? name : name.charAt(0);
       context.fillText(label, canvas.width / 2, canvas.height / 2 + fontSize / 3);
       
-      this.starLabel.material.map.needsUpdate = true;
+      // Dispose old texture and create new one
+      this.starLabel.material.map.dispose();
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      this.starLabel.material.map = texture;
     }
   }
   
   updateLabelPositions() {
     if (!this.endPoint) return;
     
-    const starRadius = Math.max(this.volumeConfig.width, this.volumeConfig.height) * 0.008;
+    // Use stored baseStarRadius if available, otherwise calculate
+    const starRadius = this.baseStarRadius || Math.max(this.volumeConfig.width, this.volumeConfig.height) * 0.008;
     const pos3D = this.endPoint.position;
     
     // Update star label position (scaled by starLabelSize)
@@ -507,7 +591,7 @@ export class StarVisualization {
     
     // Update info label position (scaled by labelSize)
     if (this.infoLabel) {
-      const infoLabelOffset = starRadius * 2.5 * this.labelSize;
+      const infoLabelOffset = starRadius * 4.0 * this.labelSize; // Increased offset - lower below star
       this.infoLabel.position.set(pos3D.x, pos3D.y - infoLabelOffset, pos3D.z);
     }
   }
@@ -525,9 +609,26 @@ export class StarVisualization {
   }
   
   dispose() {
-    if (this.point) this.point.geometry.dispose();
-    if (this.line) this.line.geometry.dispose();
-    if (this.endPoint) this.endPoint.geometry.dispose();
+    if (this.point) {
+      this.point.geometry.dispose();
+      this.point.material.dispose();
+    }
+    if (this.line) {
+      this.line.geometry.dispose();
+      this.line.material.dispose();
+    }
+    if (this.endPoint) {
+      this.endPoint.geometry.dispose();
+      this.endPoint.material.dispose();
+    }
+    if (this.glowSphere) {
+      this.glowSphere.geometry.dispose();
+      this.glowSphere.material.dispose();
+    }
+    if (this.outerGlowSphere) {
+      this.outerGlowSphere.geometry.dispose();
+      this.outerGlowSphere.material.dispose();
+    }
     if (this.starLabel) {
       this.starLabel.material.map.dispose();
       this.starLabel.material.dispose();

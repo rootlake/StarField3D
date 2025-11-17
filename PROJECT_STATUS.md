@@ -45,8 +45,7 @@
 - No number input spinners (cleaner UX)
 
 ### Known Issues / Next Steps
-- Back image rendering temporarily disabled for performance testing
-- May need to re-enable back image if performance is acceptable
+- ✅ Back image rendering re-enabled with camera-based visibility toggle
 - Consider adding keyboard shortcuts for common actions
 - Could add export/import functionality for star data
 
@@ -83,6 +82,9 @@ web/
 3. Added star label color picker
 4. Added independent star label size control
 5. Fixed label alignment by shortening "Apparent Magnitude" to "App. Mag."
+
+### Latest Changes (Current Session)
+1. Re-enabled back image rendering with camera-based visibility (shows when viewing from behind)
 
 ### To Resume Work
 1. Check git log for latest commit

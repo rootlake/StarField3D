@@ -2,7 +2,7 @@
 
 /**
  * Main data converter script
- * Converts PixInsight annotation output to StarSlice JSON format
+ * Converts PixInsight annotation output to StarField3D JSON format
  * 
  * Usage:
  *   node data-converter.js <input-file> <image-file> [output-dir]

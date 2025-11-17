@@ -110,9 +110,13 @@ export function createImagePlane(imageUrl, width, height) {
         texture.magFilter = THREE.LinearFilter;
         
         const geometry = new THREE.PlaneGeometry(width, height);
+        // Use MeshBasicMaterial - it ignores lighting and displays textures exactly as they are
+        // Add a color multiplier to darken the image to match original brightness
+        // Using 0x888888 (~53% brightness) for a moderate darkening
         const material = new THREE.MeshBasicMaterial({
           map: texture,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
+          color: 0x888888 // Darken by multiplying texture colors (0x888888 ≈ 53% brightness)
         });
         
         const plane = new THREE.Mesh(geometry, material);

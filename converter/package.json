@@ -1,7 +1,7 @@
 {
-  "name": "starslice-converter",
+  "name": "starfield3d-converter",
   "version": "1.0.0",
-  "description": "Convert PixInsight annotation data to StarSlice JSON format",
+  "description": "Convert PixInsight annotation data to StarField3D JSON format",
   "main": "data-converter.js",
   "type": "module",
   "scripts": {
