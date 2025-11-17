@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAIAView 3D Visualization</title>
+    <title>Star Field 3D Viewer</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -49,9 +49,14 @@
                     <div id="stars-container">
                         <!-- Primary star -->
                         <div class="star-entry">
-                            <div class="form-group">
+                            <div class="form-group star-label-group">
                                 <label>Star Label:</label>
                                 <input type="text" class="star-label" placeholder="e.g., Alpheratz" value="Alpheratz">
+                                <div class="pixel-coords-inline">
+                                    <span style="font-size: 11px; color: #999; margin-right: 4px;">Pixels:</span>
+                                    <input type="number" class="pixel-x" placeholder="X" step="1" style="width: 70px;">
+                                    <input type="number" class="pixel-y" placeholder="Y" step="1" style="width: 70px;">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>HIP Number:</label>

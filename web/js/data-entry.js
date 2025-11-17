@@ -116,8 +116,11 @@ function checkFormValidation() {
   const starEntries = starsContainer.querySelectorAll('.star-entry');
   let needsCoords = false;
   for (const entry of starEntries) {
-    const pixelX = entry.dataset.pixelX;
-    const pixelY = entry.dataset.pixelY;
+    // Check if pixel coordinates are provided (from input fields or dataset)
+    const pixelXInput = entry.querySelector('.pixel-x');
+    const pixelYInput = entry.querySelector('.pixel-y');
+    const pixelX = (pixelXInput && pixelXInput.value.trim()) ? pixelXInput.value.trim() : entry.dataset.pixelX;
+    const pixelY = (pixelYInput && pixelYInput.value.trim()) ? pixelYInput.value.trim() : entry.dataset.pixelY;
     if (!pixelX || !pixelY) {
       needsCoords = true;
       break;
@@ -294,9 +297,11 @@ async function exportToCSV() {
       const tempInput = entry.querySelector('.temperature-k');
       const temperature = tempInput && tempInput.value ? tempInput.value.trim() : '';
       
-      // Get pixel coordinates from data attributes (set during CSV import)
-      const pixelX = entry.dataset.pixelX || '';
-      const pixelY = entry.dataset.pixelY || '';
+      // Get pixel coordinates from input fields (preferred) or data attributes (from CSV import)
+      const pixelXInput = entry.querySelector('.pixel-x');
+      const pixelYInput = entry.querySelector('.pixel-y');
+      const pixelX = (pixelXInput && pixelXInput.value.trim()) ? pixelXInput.value.trim() : (entry.dataset.pixelX || '');
+      const pixelY = (pixelYInput && pixelYInput.value.trim()) ? pixelYInput.value.trim() : (entry.dataset.pixelY || '');
       
       if (label && hip && distancePc) {
         stars.push({
@@ -482,9 +487,13 @@ async function populateFormFromData(data) {
       }
       
       entry.innerHTML = `
-        <div class="form-group">
+        <div class="form-group star-label-group">
           <label>Star Label:</label>
           <input type="text" class="star-label" value="${escapeHtml(star.label)}">
+          <div class="pixel-coords-inline">
+            <input type="number" class="pixel-x" placeholder="X" step="1" style="width: 70px;" value="${star.pixelX !== undefined ? star.pixelX : ''}">
+            <input type="number" class="pixel-y" placeholder="Y" step="1" style="width: 70px;" value="${star.pixelY !== undefined ? star.pixelY : ''}">
+          </div>
         </div>
         <div class="form-group">
           <label>HIP Number:</label>
@@ -964,9 +973,14 @@ function addStarEntry() {
   const entry = document.createElement('div');
   entry.className = 'star-entry';
   entry.innerHTML = `
-    <div class="form-group">
+    <div class="form-group star-label-group">
       <label>Star Label:</label>
       <input type="text" class="star-label" placeholder="${label}" value="${label}">
+      <div class="pixel-coords-inline">
+        <span style="font-size: 11px; color: #999; margin-right: 4px;">Pixels:</span>
+        <input type="number" class="pixel-x" placeholder="X" step="1" style="width: 70px;">
+        <input type="number" class="pixel-y" placeholder="Y" step="1" style="width: 70px;">
+      </div>
     </div>
     <div class="form-group">
       <label>HIP Number:</label>
@@ -1119,9 +1133,13 @@ async function loadSampleData() {
     const entry = document.createElement('div');
     entry.className = 'star-entry';
     entry.innerHTML = `
-      <div class="form-group">
+      <div class="form-group star-label-group">
         <label>Star Label:</label>
         <input type="text" class="star-label" placeholder="${star.label}" value="${star.label}">
+        <div class="pixel-coords-inline">
+          <input type="number" class="pixel-x" placeholder="X" step="1" style="width: 70px;">
+          <input type="number" class="pixel-y" placeholder="Y" step="1" style="width: 70px;">
+        </div>
       </div>
       <div class="form-group">
         <label>HIP Number:</label>
@@ -1244,12 +1262,24 @@ async function handleFormSubmit(event) {
         temperature: temp
       };
       
-      // Check if pixel coordinates are stored in the entry (from CSV import)
-      const storedPixelX = entry.dataset.pixelX;
-      const storedPixelY = entry.dataset.pixelY;
-      if (storedPixelX && storedPixelY) {
-        starData.pixelX = parseFloat(storedPixelX);
-        starData.pixelY = parseFloat(storedPixelY);
+      // Get pixel coordinates from input fields (preferred) or dataset (from CSV import)
+      const pixelXInput = entry.querySelector('.pixel-x');
+      const pixelYInput = entry.querySelector('.pixel-y');
+      const pixelXValue = pixelXInput ? pixelXInput.value.trim() : '';
+      const pixelYValue = pixelYInput ? pixelYInput.value.trim() : '';
+      
+      if (pixelXValue && pixelYValue) {
+        // Use values from input fields
+        starData.pixelX = parseFloat(pixelXValue);
+        starData.pixelY = parseFloat(pixelYValue);
+      } else {
+        // Fall back to dataset (from CSV import)
+        const storedPixelX = entry.dataset.pixelX;
+        const storedPixelY = entry.dataset.pixelY;
+        if (storedPixelX && storedPixelY) {
+          starData.pixelX = parseFloat(storedPixelX);
+          starData.pixelY = parseFloat(storedPixelY);
+        }
       }
       
       stars.push(starData);
